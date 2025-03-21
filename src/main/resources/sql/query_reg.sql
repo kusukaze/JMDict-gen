@@ -65,7 +65,7 @@ query_exp as (
 SELECT * FROM jmdict_tmp
 WHERE yomi REGEXP (SELECT pattern FROM query_exp);
 
--- 正则表达式6：ABAB拟态词，用负向前瞻排除AAAA型
+-- 正则表达式6：ABAB拟态词，使用负向前瞻排除AAAA型词语
 with jmdict_tmp as (
     select ID,termName,substring_index(yomi,',',1) as yomi,partOfSpeech from j.jmdict
 ),
@@ -79,21 +79,21 @@ query_exp as (
 SELECT * FROM jmdict_tmp
 WHERE yomi REGEXP (SELECT pattern FROM query_exp);
 
--- 正则表达式7：AAB型词语，用(?!\1)负向前瞻排除AAA型
+-- 正则表达式7：AAB型词语，使用负向前瞻(?!\1)排除AAA型词语
 with jmdict_tmp as (
-     select ID,termName,substring_index(yomi,',',1) as yomi,partOfSpeech from j.jmdict
+    select ID,termName,substring_index(yomi,',',1) as yomi,partOfSpeech from j.jmdict
 ),
 query_exp as (
-     select CONCAT('^(',
-     (SELECT pattern FROM j.reg_lib WHERE name = 'X'),
-     ')\\1(?!\\1)',
-     (SELECT pattern FROM j.reg_lib WHERE name = 'X'),
-     '$') as pattern
+    select CONCAT('^(',
+    (SELECT pattern FROM j.reg_lib WHERE name = 'X'),
+    ')\\1(?!\\1)',
+    (SELECT pattern FROM j.reg_lib WHERE name = 'X'),
+    '$') as pattern
 )
-SELECT * FROM jmdict_tmp WHERE yomi REGEXP (SELECT pattern FROM query_exp)
-;
+SELECT * FROM jmdict_tmp
+WHERE yomi REGEXP (SELECT pattern FROM query_exp);
 
--- 正则表达式8：ABB型词语，用(?!\1)负向前瞻排除AAA型
+-- 正则表达式8：ABB型词语，使用负向前瞻(?!\1)排除AAA型词语
 with jmdict_tmp as (
     select ID,termName,substring_index(yomi,',',1) as yomi,partOfSpeech from j.jmdict
 ),
@@ -106,3 +106,27 @@ query_exp as (
 )
 SELECT * FROM jmdict_tmp
 WHERE yomi REGEXP (SELECT pattern FROM query_exp);
+
+-- 正则表达式9：长度为5，且每段各一个
+with jmdict_tmp as (
+    select ID,termName,substring_index(yomi,',',1) as yomi,partOfSpeech from j.jmdict
+)
+SELECT * FROM jmdict_tmp
+WHERE yomi REGEXP '^.{5}$'
+and yomi REGEXP (SELECT CONCAT('^.*',(SELECT pattern FROM j.reg_lib WHERE name = 'A'),'.*$'))
+and yomi REGEXP (SELECT CONCAT('^.*',(SELECT pattern FROM j.reg_lib WHERE name = 'I'),'.*$'))
+and yomi REGEXP (SELECT CONCAT('^.*',(SELECT pattern FROM j.reg_lib WHERE name = 'U'),'.*$'))
+and yomi REGEXP (SELECT CONCAT('^.*',(SELECT pattern FROM j.reg_lib WHERE name = 'E'),'.*$'))
+and yomi REGEXP (SELECT CONCAT('^.*',(SELECT pattern FROM j.reg_lib WHERE name = 'O'),'.*$'));
+
+-- 正则表达式10：长度为5，且每段各一个（含拗音）
+with jmdict_tmp as (
+    select ID,termName,substring_index(yomi,',',1) as yomi,partOfSpeech from j.jmdict
+)
+SELECT * FROM jmdict_tmp
+WHERE yomi REGEXP (SELECT CONCAT('^',(SELECT pattern FROM j.reg_lib WHERE name = 'X'),'{5}$'))
+and yomi REGEXP (SELECT CONCAT('^.*',(SELECT pattern FROM j.reg_lib WHERE name = 'Ax'),'[^ゃャぁァぃィゅュぅゥぇェょョぉォ]*$'))
+and yomi REGEXP (SELECT CONCAT('^.*',(SELECT pattern FROM j.reg_lib WHERE name = 'Ix'),'[^ゃャぁァぃィゅュぅゥぇェょョぉォ]*$'))
+and yomi REGEXP (SELECT CONCAT('^.*',(SELECT pattern FROM j.reg_lib WHERE name = 'Ux'),'[^ゃャぁァぃィゅュぅゥぇェょョぉォ]*$'))
+and yomi REGEXP (SELECT CONCAT('^.*',(SELECT pattern FROM j.reg_lib WHERE name = 'Ex'),'[^ゃャぁァぃィゅュぅゥぇェょョぉォ]*$'))
+and yomi REGEXP (SELECT CONCAT('^.*',(SELECT pattern FROM j.reg_lib WHERE name = 'Ox'),'[^ゃャぁァぃィゅュぅゥぇェょョぉォ]*$'));
