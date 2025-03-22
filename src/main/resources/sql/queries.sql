@@ -41,5 +41,5 @@ with jmdict_tmp as (
     select ID,termName,substring_index(yomi,',',1) as yomi,partOfSpeech from j.jmdict
 )
 SELECT * FROM jmdict_tmp
-WHERE yomi = reverse(yomi)
+WHERE binary yomi = reverse(yomi)
 and char_length(yomi) >= 4;
