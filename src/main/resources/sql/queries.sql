@@ -35,3 +35,11 @@ select right(yomi,1) as ending, count(1) as cnt,
 count(1) / sum(count(1)) over() AS ratio from jmdict_tmp
 where partOfSpeech like "%v5%"
 group by binary ending order by ratio desc;
+
+-- 搜索回文单词
+with jmdict_tmp as (
+    select ID,termName,substring_index(yomi,',',1) as yomi,partOfSpeech from j.jmdict
+)
+SELECT * FROM jmdict_tmp
+WHERE yomi = reverse(yomi)
+and char_length(yomi) >= 4;
